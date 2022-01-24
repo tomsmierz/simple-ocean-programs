@@ -52,8 +52,8 @@ print("sampling done")
 df =sampleset.to_pandas_dataframe(sample_column = True)
 
 df["h"] = [h for _ in range(NUM_READS)]
-df["J"] = [h for _ in range(NUM_READS)]
+df["J"] = [J for _ in range(NUM_READS)]
 
-df.to_csv("data/2048_5.csv")
+df.to_csv("data/2048_1.csv")
 
 
