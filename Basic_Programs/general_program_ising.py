@@ -24,31 +24,36 @@ from dwave.system import EmbeddingComposite, DWaveSampler
 import dwave_networkx as dnx
 from numpy.random import default_rng
 import pandas as pd
+from dwave.cloud import Client
 
 rng = default_rng()
-NUM_READS = 10
+NUM_READS = 100
+
+client = Client.from_config()   
+#print(client.get_solvers())
 
 
 
-for i in range(1,11):
-    graph = dnx.chimera_graph(16, 16, 4)
-    edge_attr = {edge: rng.normal(0, 1) for edge in graph.edges}
-    external = {node: rng.normal(0, 1) for node in graph.nodes}
+# Define the sampler that will be used to run the problem
+sampler = DWaveSampler(solver="DW_2000Q_6")
 
+h = {node: rng.normal(0,1) for node in sampler.nodelist}
+J = {edge: rng.normal(0,1) for edge in sampler.edgelist}
 
-    # Define the sampler that will be used to run the problem
-    sampler = EmbeddingComposite(DWaveSampler())
+print("graph done")
 
     # Run the problem on the sampler and print the results
-    sampleset = sampler.sample_ising(external, edge_attr,
+sampleset = sampler.sample_ising(h, J,
                                     num_reads = NUM_READS,
-                                    label='Example - Simple Ocean Programs: Ising')
+                                    label='Chimera 2048')
 
-    df =sampleset.to_pandas_dataframe(sample_column = True)
+sampleset = sampleset.aggregate()
+print("sampling done")
+df =sampleset.to_pandas_dataframe(sample_column = True)
 
-    df["h"] = [external for _ in range(NUM_READS)]
-    df["J"] = [edge_attr for _ in range(NUM_READS)]
-    print(i)
-    df.to_csv(f"data/128_{i}.csv")
+df["h"] = [h for _ in range(NUM_READS)]
+df["J"] = [h for _ in range(NUM_READS)]
+
+df.to_csv("data/2048_5.csv")
 
 
