@@ -27,33 +27,40 @@ import pandas as pd
 from dwave.cloud import Client
 
 rng = default_rng()
-NUM_READS = 100
+NUM_READS = 10 #default value for chimera
 
 client = Client.from_config()   
 #print(client.get_solvers())
 
-
+h_list = []
+J_list = []
+spins = []
+energies = []
 
 # Define the sampler that will be used to run the problem
-sampler = DWaveSampler(solver="DW_2000Q_6")
+graph = dnx.chimera_graph(12,12,4)
 
-h = {node: rng.normal(0,1) for node in sampler.nodelist}
-J = {edge: rng.normal(0,1) for edge in sampler.edgelist}
+sampler = EmbeddingComposite(DWaveSampler(solver="DW_2000Q_6"))
+for _ in range(500):
+    h = {node: rng.normal(0,1) for node in graph.nodes}
+    J = {edge: rng.normal(0,1) for edge in graph.edges}
 
-print("graph done")
+        # Run the problem on the sampler and print the results
+    sampleset = sampler.sample_ising(h, J,
+                                        num_reads = NUM_READS,
+                                        label='Chimera 2048')
 
-    # Run the problem on the sampler and print the results
-sampleset = sampler.sample_ising(h, J,
-                                    num_reads = NUM_READS,
-                                    label='Chimera 2048')
+    best = sampleset.first
+    h_list.append(h)
+    J_list.append(J)
+    spins.append(best[0])
+    energies.append(best[1])
 
-sampleset = sampleset.aggregate()
-print("sampling done")
-df =sampleset.to_pandas_dataframe(sample_column = True)
+d = {'h': h_list, 'J': J_list, "spin_conf": spins, "energy": energies}
 
-df["h"] = [h for _ in range(NUM_READS)]
-df["J"] = [J for _ in range(NUM_READS)]
+df = pd.DataFrame(data=d)
+df.to_csv("data/1152.csv")
 
-df.to_csv("data/2048_1.csv")
+
 
 
